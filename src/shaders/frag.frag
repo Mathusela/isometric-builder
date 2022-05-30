@@ -1,7 +1,12 @@
 #version 410 core
 
-in float idIn;
+uniform sampler2D texture;
+
+in vec2 uv;
 
 void main() {
-	gl_FragColor = vec4(1.0 * (idIn * 0.1), 0.0, 0.0, 1.0);
+	vec4 col = texture2D(texture, uv);
+	gl_FragColor = col;
+
+	if (col.a == 0) discard;
 }

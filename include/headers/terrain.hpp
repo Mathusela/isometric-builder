@@ -8,3 +8,10 @@ public:
 
 	Grass();
 };
+
+class Stone : public Tile {
+public:
+	void place(glm::vec3 coords);
+
+	Stone();
+};

@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <vector>
 
-enum t_tile {GRASS};
+enum t_tile {GRASS, STONE};
 using t_texture = unsigned int;
 using t_shader = unsigned int;
 using t_buffer = unsigned int;

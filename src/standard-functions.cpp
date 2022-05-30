@@ -53,6 +53,7 @@ GLFWwindow* create_window(unsigned int width, unsigned int height, char* title, 
  */
 unsigned int create_texture(std::string imagePath) {
     int width, height, colorChannelCount;
+	stbi_set_flip_vertically_on_load(1);
     unsigned char* image = stbi_load(imagePath.c_str(), &width, &height, &colorChannelCount, 0);
 
     GLenum imageFormat = (colorChannelCount == 4) ? GL_RGBA : GL_RGB;
@@ -69,8 +70,8 @@ unsigned int create_texture(std::string imagePath) {
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, imageFormat, GL_UNSIGNED_BYTE, image);
     glGenerateMipmap(GL_TEXTURE_2D);
