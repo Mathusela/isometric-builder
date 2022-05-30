@@ -8,13 +8,14 @@ out vec2 uv;
 out vec3 hue;
 
 uniform vec2 resolution;
+uniform vec2 worldPos;
 
 uniform float numInRowUni;
 
 void main() {
 	float numInRow = numInRowUni/2;
 
-	vec2 scaled = (position.xy / resolution) * (resolution.x / numInRow);
+	vec2 scaled = ((position.xy + worldPos) / resolution) * (resolution.x / numInRow);
 	scaled -= vec2(0.5*(1/numInRow), 1.0);
 
 	// FIXME: top of the sceen is streched

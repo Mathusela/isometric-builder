@@ -35,6 +35,9 @@ std::unordered_map<t_tile, int> g_countMap;
 // Number of tiles in row
 float g_numInRow = 10.0;
 
+// Displacement in world
+glm::vec2 g_worldPos = glm::vec2(0.0, 0.0);
+
 // Draw tiles
 void draw_tiles(t_shader shaderProgram, t_buffer VAO, t_tile type) {
 	glUseProgram(shaderProgram);
@@ -46,6 +49,8 @@ void draw_tiles(t_shader shaderProgram, t_buffer VAO, t_tile type) {
 	glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, g_textureMap[type]);
 
 	glUniform1f(glGetUniformLocation(shaderProgram, "numInRowUni"), g_numInRow);
+
+	glUniform2fv(glGetUniformLocation(shaderProgram, "worldPos"), 1, glm::value_ptr(g_worldPos));
 
 	glDrawArraysInstanced(GL_TRIANGLES, 0, sizeof(tileGeom)/sizeof(tileGeom[0]), g_countMap[type]);
 	glBindVertexArray(0);
@@ -116,6 +121,11 @@ void gen_tile_VAO(t_buffer& VAO, t_buffer& cVBO, t_tile type) {
 void handle_keyboard(GLFWwindow* window, int WIDTH, int HEIGHT) {
 	if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) if (g_numInRow <= 20.0) g_numInRow += 0.01;
 	if(glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) if (g_numInRow >= 1.0) g_numInRow -= 0.01;
+	
+	if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) g_worldPos -= glm::vec2(0.0, 0.01);
+	if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) g_worldPos += glm::vec2(0.0, 0.01);
+	if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) g_worldPos += glm::vec2(0.01, 0.0);
+	if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) g_worldPos -= glm::vec2(0.01, 0.0);
 } 
 
 void handle_mouse(GLFWwindow* window, int WIDTH, int HEIGHT) {
@@ -129,8 +139,8 @@ void handle_mouse(GLFWwindow* window, int WIDTH, int HEIGHT) {
 					 glm::vec3 {-(1.0/numInRow)/2.0, 0.35/(numInRow), 0.0},
 					 glm::vec3 {0.0, 0.69/(numInRow), 1.0}};
 
-	auto scaledBL = (glm::vec2(0, 0) / glm::vec2(WIDTH, HEIGHT))*(WIDTH/numInRow) - glm::vec2(0.5 * (1.0/numInRow), 1.0);
-	auto scaledTR = (glm::vec2(1, 1) / glm::vec2(WIDTH, HEIGHT))*(WIDTH/numInRow) - glm::vec2(0.5 * (1.0/numInRow), 1.0);
+	auto scaledBL = ((glm::vec2(0, 0) + g_worldPos) / glm::vec2(WIDTH, HEIGHT))*(WIDTH/numInRow) - glm::vec2(0.5 * (1.0/numInRow), 1.0);
+	auto scaledTR = ((glm::vec2(1, 1) + g_worldPos) / glm::vec2(WIDTH, HEIGHT))*(WIDTH/numInRow) - glm::vec2(0.5 * (1.0/numInRow), 1.0);
 
 	std::vector<Tile*> hoveredTiles;
 	for (auto tile : g_tiles) {
