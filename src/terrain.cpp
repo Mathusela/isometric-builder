@@ -18,6 +18,14 @@ Grass::Grass() {
 	m_type = GRASS;
 }
 
+void Grass::hover() {
+	set_hue(glm::vec3(0.2, 0.2, 1.0));
+}
+
+void Grass::unhover() {
+	set_hue(glm::vec3(0.0, 0.0, 0.0));
+}
+
 void Stone::place(glm::vec3 coords) {
 	set_coords(coords);
 	m_depth = calcDepth(coords);
@@ -25,4 +33,12 @@ void Stone::place(glm::vec3 coords) {
 
 Stone::Stone() {
 	m_type = STONE;
+}
+
+void Stone::hover() {
+	set_hue(glm::vec3(0.2, 0.2, 1.0));
+}
+
+void Stone::unhover() {
+	set_hue(glm::vec3(0.0, 0.0, 0.0));
 }

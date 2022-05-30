@@ -46,8 +46,28 @@ void draw_tiles(t_shader shaderProgram, t_buffer VAO, t_tile type) {
 	glBindVertexArray(0);
 }
 
+// Update Coord VBO
+void update_coord_VBO(t_buffer& cVBO, t_tile type) {
+	std::vector<float> positionData;
+	for (Tile* tile : g_tiles) {
+		if (tile->get_type() == type) {
+			positionData.push_back(tile->get_coords().x);
+			positionData.push_back(tile->get_coords().y);
+			positionData.push_back(tile->get_coords().z);
+			positionData.push_back(tile->get_depth());
+			positionData.push_back(tile->get_hue().x);
+			positionData.push_back(tile->get_hue().y);
+			positionData.push_back(tile->get_hue().z);
+		}
+	}
+	if (positionData.size() == 0) return;
+	
+	glBindBuffer(GL_ARRAY_BUFFER, cVBO);
+	glBufferData(GL_ARRAY_BUFFER, positionData.size() * sizeof(positionData[0]), &positionData[0], GL_DYNAMIC_DRAW);
+}
+
 // Create tile VAO
-void gen_tile_VAO(t_buffer& VAO, t_tile type) {
+void gen_tile_VAO(t_buffer& VAO, t_buffer& cVBO, t_tile type) {
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
 
@@ -66,20 +86,63 @@ void gen_tile_VAO(t_buffer& VAO, t_tile type) {
 			positionData.push_back(tile->get_coords().y);
 			positionData.push_back(tile->get_coords().z);
 			positionData.push_back(tile->get_depth());
+			positionData.push_back(tile->get_hue().x);
+			positionData.push_back(tile->get_hue().y);
+			positionData.push_back(tile->get_hue().z);
 		}
 	}
 	if (positionData.size() == 0) return;
 	
-	t_buffer cVBO;
 	glGenBuffers(1, &cVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, cVBO);
-	glBufferData(GL_ARRAY_BUFFER, positionData.size() * sizeof(positionData[0]), &positionData[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, positionData.size() * sizeof(positionData[0]), &positionData[0], GL_DYNAMIC_DRAW);
 
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(positionData[0])*4, (void*)0);
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(positionData[0])*7, (void*)0);
 	glEnableVertexAttribArray(1);
 	glVertexAttribDivisor(1, 1);
 
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(positionData[0])*7, (void*)(4 * sizeof(positionData[0])));
+	glEnableVertexAttribArray(2);
+	glVertexAttribDivisor(2, 1);
+
 	glBindVertexArray(0);
+}
+
+void handle_mouse(GLFWwindow* window, float numInRow, int WIDTH, int HEIGHT) {
+	numInRow = numInRow/2.0;
+	double x, y;
+	glfwGetCursorPos(window, &x, &y);
+	x /= WIDTH/2; x += -1.0; y /= HEIGHT/2; y = 1.0 - y;
+
+	glm::mat3 iso = {glm::vec3 {(1.0/numInRow)/2.0, (1.0/numInRow)*0.35, 0.0},
+					 glm::vec3 {-(1.0/numInRow)/2.0, 0.35/(numInRow), 0.0},
+					 glm::vec3 {0.0, 0.64/(numInRow), 1.0}};
+
+	auto scaledBL = (glm::vec2(0, 0) / glm::vec2(WIDTH, HEIGHT))*(WIDTH/numInRow) - glm::vec2(0.5 * (1.0/numInRow), 1.0);
+	auto scaledTR = (glm::vec2(1, 1) / glm::vec2(WIDTH, HEIGHT))*(WIDTH/numInRow) - glm::vec2(0.5 * (1.0/numInRow), 1.0);
+
+	std::vector<Tile*> hoveredTiles;
+	for (auto tile : g_tiles) {
+		glm::vec3 isoBL = glm::vec3(scaledBL.x, scaledBL.y, 0.0) + (iso * tile->get_coords());
+		glm::vec3 isoTR = glm::vec3(scaledTR.x, scaledTR.y, 0.0) + (iso * tile->get_coords());
+
+		if (x >= isoBL.x && x <= isoTR.x && y >= isoBL.y && y <= isoTR.y) hoveredTiles.push_back(tile);
+	}
+
+	// FIXME: Tiles under other tiles are covered up by the corners of other tiles
+	if (hoveredTiles.size() != 0) {
+		auto minDepth = hoveredTiles[0]->get_depth();
+		Tile* closestTile;
+		for (auto hovered : hoveredTiles) {
+			if (hovered->get_depth() <= minDepth) {
+				closestTile = hovered;
+				minDepth = hovered->get_depth();
+			}
+		}
+		closestTile->set_hovered();
+	}
+
+	for (auto tile : g_tiles) tile->update(); 
 }
 
 // Count the number of each tile type
@@ -130,10 +193,11 @@ int main() {
 
 	// Generate VAO
 	std::vector<t_buffer> VAOs;
+	std::vector<t_buffer> VBOs;
 	for (int i=GRASS; i<TILE_END; i++) {
-		t_buffer VAO;
-		gen_tile_VAO(VAO, (t_tile)i);
-		VAOs.push_back(VAO);
+		t_buffer VAO, VBO;
+		gen_tile_VAO(VAO, VBO, (t_tile)i);
+		VAOs.push_back(VAO); VBOs.push_back(VBO);
 	}
 
 	// Game loop
@@ -146,10 +210,14 @@ int main() {
 
 		for (int i=GRASS; i<TILE_END; i++) draw_tiles(shaderProgram, VAOs[i], (t_tile)i);
 
+		handle_mouse(window, 10, WIDTH, HEIGHT);
+		for (int i=GRASS; i<TILE_END; i++) update_coord_VBO(VBOs[i], (t_tile)i);
+
 		glfwPollEvents();
 		glfwSwapBuffers(window);
 	}
 	
+	// Clean up
 	for (auto tile : g_tiles) delete tile;
 
 	return 0;
