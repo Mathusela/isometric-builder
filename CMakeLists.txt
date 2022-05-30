@@ -9,7 +9,7 @@ link_directories(lib)
 
 link_libraries(glfw3 opengl32 gdi32)
 
-add_executable(isometric-builder src/main.cpp src/glad.c src/standard-functions.cpp)
+add_executable(isometric-builder src/main.cpp src/glad.c src/standard-functions.cpp src/tile.cpp src/terrain.cpp)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
