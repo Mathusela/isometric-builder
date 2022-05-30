@@ -135,8 +135,8 @@ void handle_mouse(GLFWwindow* window, int WIDTH, int HEIGHT) {
 	glfwGetCursorPos(window, &x, &y);
 	x /= WIDTH/2; x += -1.0; y /= HEIGHT/2; y = 1.0 - y;
 
-	glm::mat3 iso = {glm::vec3 {(1.0/numInRow)/2.0, (1.0/numInRow)*0.35, 0.0},
-					 glm::vec3 {-(1.0/numInRow)/2.0, 0.35/(numInRow), 0.0},
+	glm::mat3 iso = {glm::vec3 {(1.0/numInRow)/2.0, (1.0/numInRow)*0.36, 0.0},
+					 glm::vec3 {-(1.0/numInRow)/2.0, 0.36/(numInRow), 0.0},
 					 glm::vec3 {0.0, 0.69/(numInRow), 1.0}};
 
 	auto scaledBL = ((glm::vec2(0, 0) + g_worldPos) / glm::vec2(WIDTH, HEIGHT))*(WIDTH/numInRow) - glm::vec2(0.5 * (1.0/numInRow), 1.0);
