@@ -88,9 +88,9 @@ void gen_tile_geom_VAO(t_buffer& VAO) {
 		positionData.push_back(tile->get_depth());
 	}
 	
-	t_buffer VBO2;
-	glGenBuffers(1, &VBO2);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO2);
+	t_buffer cVBO;
+	glGenBuffers(1, &cVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, cVBO);
 	glBufferData(GL_ARRAY_BUFFER, positionData.size() * sizeof(positionData[0]), &positionData[0], GL_STATIC_DRAW);
 
 	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(positionData[0])*4, (void*)0);

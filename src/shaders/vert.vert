@@ -23,7 +23,7 @@ void main() {
 
 	vec2 offset = (vec3(scaled, 0.0) + (iso * coordIn.xyz)).xy; 
 
-	gl_Position =  vec4(offset, -coordIn.w, 1.0);
+	gl_Position =  vec4(offset, coordIn.w, 1.0);
 
 	uv = position.xy;
 }
