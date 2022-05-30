@@ -23,6 +23,8 @@ float tileGeom[] = {
 	1.0, 1.0, 0.0
 };
 
+// TODO: add deltatime 
+
 // Vector of tiles to be drawn
 std::vector<Tile*> g_tiles;
 
@@ -195,16 +197,16 @@ int main() {
 	g_textureMap.insert({STONE, create_texture("../../resources/textures/stone.png")});
 
 	// Add tiles
-	for (int i=0; i<20; i++) {
-		for (int j=0; j<20; j++) {
+	for (int i=0; i<30; i++) {
+		for (int j=0; j<30; j++) {
 			Stone* g = new Stone;
 			g->place(glm::vec3(i, j, 0.0));
 			g_tiles.push_back(g);
 		}
 	}
 
-	for (int i=0; i<20; i++) {
-		for (int j=0; j<20; j++) {
+	for (int i=0; i<30; i++) {
+		for (int j=0; j<30; j++) {
 			Grass* g = new Grass;
 			g->place(glm::vec3(i, j, 1.0));
 			g_tiles.push_back(g);
@@ -231,6 +233,8 @@ int main() {
 		gen_tile_VAO(VAO, VBO, (t_tile)i);
 		VAOs.push_back(VAO); VBOs.push_back(VBO);
 	}
+
+	glfwSwapInterval(0);
 
 	// Game loop
 	glClearColor(1.0, 1.0, 1.0, 1.0);
