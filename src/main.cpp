@@ -10,7 +10,7 @@
 #include <vector>
 #include <iostream>
 
-const unsigned int WIDTH = 800, HEIGHT = 600;
+const unsigned int WIDTH = 1200, HEIGHT = 800;
 char* TITLE = "Isometric builder";
 
 float tileGeom[] = {
@@ -32,6 +32,9 @@ std::unordered_map<t_tile, t_texture> g_textureMap;
 // Map of num of each tile type
 std::unordered_map<t_tile, int> g_countMap;
 
+// Number of tiles in row
+float g_numInRow = 10.0;
+
 // Draw tiles
 void draw_tiles(t_shader shaderProgram, t_buffer VAO, t_tile type) {
 	glUseProgram(shaderProgram);
@@ -41,6 +44,8 @@ void draw_tiles(t_shader shaderProgram, t_buffer VAO, t_tile type) {
 	
 	glUniform1i(glGetUniformLocation(shaderProgram, "texture"), 0);
 	glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, g_textureMap[type]);
+
+	glUniform1f(glGetUniformLocation(shaderProgram, "numInRowUni"), g_numInRow);
 
 	glDrawArraysInstanced(GL_TRIANGLES, 0, sizeof(tileGeom)/sizeof(tileGeom[0]), g_countMap[type]);
 	glBindVertexArray(0);
@@ -108,15 +113,21 @@ void gen_tile_VAO(t_buffer& VAO, t_buffer& cVBO, t_tile type) {
 	glBindVertexArray(0);
 }
 
-void handle_mouse(GLFWwindow* window, float numInRow, int WIDTH, int HEIGHT) {
-	numInRow = numInRow/2.0;
+void handle_keyboard(GLFWwindow* window, int WIDTH, int HEIGHT) {
+	if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) if (g_numInRow <= 20.0) g_numInRow += 0.01;
+	if(glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) if (g_numInRow >= 1.0) g_numInRow -= 0.01;
+} 
+
+void handle_mouse(GLFWwindow* window, int WIDTH, int HEIGHT) {
+	float numInRow = g_numInRow;
+	numInRow = numInRow/2.0f;
 	double x, y;
 	glfwGetCursorPos(window, &x, &y);
 	x /= WIDTH/2; x += -1.0; y /= HEIGHT/2; y = 1.0 - y;
 
 	glm::mat3 iso = {glm::vec3 {(1.0/numInRow)/2.0, (1.0/numInRow)*0.35, 0.0},
 					 glm::vec3 {-(1.0/numInRow)/2.0, 0.35/(numInRow), 0.0},
-					 glm::vec3 {0.0, 0.64/(numInRow), 1.0}};
+					 glm::vec3 {0.0, 0.69/(numInRow), 1.0}};
 
 	auto scaledBL = (glm::vec2(0, 0) / glm::vec2(WIDTH, HEIGHT))*(WIDTH/numInRow) - glm::vec2(0.5 * (1.0/numInRow), 1.0);
 	auto scaledTR = (glm::vec2(1, 1) / glm::vec2(WIDTH, HEIGHT))*(WIDTH/numInRow) - glm::vec2(0.5 * (1.0/numInRow), 1.0);
@@ -145,6 +156,11 @@ void handle_mouse(GLFWwindow* window, float numInRow, int WIDTH, int HEIGHT) {
 	for (auto tile : g_tiles) tile->update(); 
 }
 
+void handle_input(GLFWwindow* window, int WIDTH, int HEIGHT) {
+	handle_keyboard(window, WIDTH, HEIGHT);
+	handle_mouse(window, WIDTH, HEIGHT);
+}
+
 // Count the number of each tile type
 void gen_count_map() {
 	for (int i=GRASS; i<TILE_END; i++) {
@@ -169,20 +185,26 @@ int main() {
 	g_textureMap.insert({STONE, create_texture("../../resources/textures/stone.png")});
 
 	// Add tiles
-	for (int i=0; i<10; i++) {
-		for (int j=0; j<10; j++) {
+	for (int i=0; i<20; i++) {
+		for (int j=0; j<20; j++) {
 			Stone* g = new Stone;
 			g->place(glm::vec3(i, j, 0.0));
 			g_tiles.push_back(g);
 		}
 	}
 
-	for (int i=0; i<10; i++) {
-		for (int j=0; j<10; j++) {
+	for (int i=0; i<20; i++) {
+		for (int j=0; j<20; j++) {
 			Grass* g = new Grass;
 			g->place(glm::vec3(i, j, 1.0));
 			g_tiles.push_back(g);
 		}
+	}
+
+	for (int i=2; i<5; i++) {
+		Stone* g = new Stone;
+		g->place(glm::vec3(0.0, 0.0, i));
+		g_tiles.push_back(g);
 	}
 
 	// Compile shaders
@@ -210,7 +232,7 @@ int main() {
 
 		for (int i=GRASS; i<TILE_END; i++) draw_tiles(shaderProgram, VAOs[i], (t_tile)i);
 
-		handle_mouse(window, 10, WIDTH, HEIGHT);
+		handle_input(window, WIDTH, HEIGHT);
 		for (int i=GRASS; i<TILE_END; i++) update_coord_VBO(VBOs[i], (t_tile)i);
 
 		glfwPollEvents();
