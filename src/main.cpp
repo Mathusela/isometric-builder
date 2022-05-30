@@ -29,46 +29,25 @@ std::vector<Tile*> g_tiles;
 // Map of textures
 std::unordered_map<t_tile, t_texture> g_textureMap;
 
-// Sort tiles into materials
-auto quick_sort_tiles(std::vector<Tile*> unsorted) {
-	if (unsorted.size() <= 1) return unsorted;
-	
-	auto midpoint = unsorted[0]->get_type();
-
-	std::vector<Tile*> lowerList; std::vector<Tile*> equalList; std::vector<Tile*> higherList;
-
-	for (auto element : unsorted) {
-		if (element->get_type() < midpoint) lowerList.push_back(element);
-		else if (element->get_type() == midpoint) equalList.push_back(element);
-		else higherList.push_back(element);
-	}
-
-	auto sortedLower = quick_sort_tiles(lowerList);
-	auto sortedHigher = quick_sort_tiles(higherList);
-
-	auto combinedList = sortedLower; 
-	combinedList.insert(combinedList.end(), equalList.begin(), equalList.end()); 
-	combinedList.insert(combinedList.end(), sortedHigher.begin(), sortedHigher.end());
-
-	return combinedList;
-}
+// Map of num of each tile type
+std::unordered_map<t_tile, int> g_countMap;
 
 // Draw tiles
-void draw_tiles(t_shader shaderProgram, t_buffer VAO) {
+void draw_tiles(t_shader shaderProgram, t_buffer VAO, t_tile type) {
 	glUseProgram(shaderProgram);
 	glBindVertexArray(VAO);
 	
 	glUniform2fv(glGetUniformLocation(shaderProgram, "resolution"), 1, glm::value_ptr(glm::vec2(WIDTH, HEIGHT)));
 	
 	glUniform1i(glGetUniformLocation(shaderProgram, "texture"), 0);
-	glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, g_textureMap[g_tiles[0]->get_type()]);
+	glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, g_textureMap[type]);
 
-	glDrawArraysInstanced(GL_TRIANGLES, 0, sizeof(tileGeom)/sizeof(tileGeom[0]), g_tiles.size());
+	glDrawArraysInstanced(GL_TRIANGLES, 0, sizeof(tileGeom)/sizeof(tileGeom[0]), g_countMap[type]);
 	glBindVertexArray(0);
 }
 
 // Create tile VAO
-void gen_tile_geom_VAO(t_buffer& VAO) {
+void gen_tile_VAO(t_buffer& VAO, t_tile type) {
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
 
@@ -82,11 +61,14 @@ void gen_tile_geom_VAO(t_buffer& VAO) {
 
 	std::vector<float> positionData;
 	for (Tile* tile : g_tiles) {
-		positionData.push_back(tile->get_coords().x);
-		positionData.push_back(tile->get_coords().y);
-		positionData.push_back(tile->get_coords().z);
-		positionData.push_back(tile->get_depth());
+		if (tile->get_type() == type) {
+			positionData.push_back(tile->get_coords().x);
+			positionData.push_back(tile->get_coords().y);
+			positionData.push_back(tile->get_coords().z);
+			positionData.push_back(tile->get_depth());
+		}
 	}
+	if (positionData.size() == 0) return;
 	
 	t_buffer cVBO;
 	glGenBuffers(1, &cVBO);
@@ -98,6 +80,15 @@ void gen_tile_geom_VAO(t_buffer& VAO) {
 	glVertexAttribDivisor(1, 1);
 
 	glBindVertexArray(0);
+}
+
+// Count the number of each tile type
+void gen_count_map() {
+	for (int i=GRASS; i<TILE_END; i++) {
+		int count = 0;
+		for (auto tile : g_tiles) if (tile->get_type() == i) count++;
+		g_countMap.insert({(t_tile)i, count});
+	}
 }
 
 int main() {
@@ -123,26 +114,27 @@ int main() {
 		}
 	}
 
-	Stone* g1 = new Stone;
-	g1->place(glm::vec3(2.0, 2.0, 1.0));
-	g_tiles.push_back(g1);
-
-	Stone* g2 = new Stone;
-	g2->place(glm::vec3(2.0, 2.0, 2.0));
-	g_tiles.push_back(g2);
-
-	Stone* g3 = new Stone;
-	g3->place(glm::vec3(3.0, 2.0, 2.0));
-	g_tiles.push_back(g3);
-
-	g_tiles = quick_sort_tiles(g_tiles);
+	for (int i=0; i<10; i++) {
+		for (int j=0; j<10; j++) {
+			Grass* g = new Grass;
+			g->place(glm::vec3(i, j, 1.0));
+			g_tiles.push_back(g);
+		}
+	}
 
 	// Compile shaders
 	t_shader shaderProgram = create_shader("../../src/shaders/vert.vert", "../../src/shaders/frag.frag");
 
+	// Generate count map
+	gen_count_map();
+
 	// Generate VAO
-	t_buffer VAO;
-	gen_tile_geom_VAO(VAO);
+	std::vector<t_buffer> VAOs;
+	for (int i=GRASS; i<TILE_END; i++) {
+		t_buffer VAO;
+		gen_tile_VAO(VAO, (t_tile)i);
+		VAOs.push_back(VAO);
+	}
 
 	// Game loop
 	glClearColor(1.0, 1.0, 1.0, 1.0);
@@ -152,7 +144,7 @@ int main() {
 	while (!glfwWindowShouldClose(window)) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		draw_tiles(shaderProgram, VAO);
+		for (int i=GRASS; i<TILE_END; i++) draw_tiles(shaderProgram, VAOs[i], (t_tile)i);
 
 		glfwPollEvents();
 		glfwSwapBuffers(window);
