@@ -139,6 +139,7 @@ void handle_mouse(GLFWwindow* window, int WIDTH, int HEIGHT) {
 	glfwGetCursorPos(window, &x, &y);
 	x /= WIDTH/2; x += -1.0; y /= HEIGHT/2; y = 1.0 - y;
 
+	// TODO: If I can do the inverse of this to the mouse position I can use hash mapping to speed this up and directly access the hovered tiles
 	glm::mat3 iso = {glm::vec3 {(1.0/numInRow)/2.0, (1.0/numInRow)*0.36, 0.0},
 					 glm::vec3 {-(1.0/numInRow)/2.0, 0.36/(numInRow), 0.0},
 					 glm::vec3 {0.0, 0.69/(numInRow), 1.0}};
@@ -165,6 +166,7 @@ void handle_mouse(GLFWwindow* window, int WIDTH, int HEIGHT) {
 			}
 		}
 		closestTile->set_hovered();
+		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) closestTile->set_interacted();
 	}
 
 	for (auto tile : g_tiles) tile->update(); 

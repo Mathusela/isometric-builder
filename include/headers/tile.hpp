@@ -11,9 +11,12 @@ protected:
 	glm::vec3 m_coords;
 	t_tile m_type;
 	float m_depth;
+	
 	bool m_hovered = false, m_wasHovered = false;
-	virtual void hover() {};
-	virtual void unhover() {};
+	bool m_interacted = false, m_wasInteracted = false;
+	virtual void hover() {}; virtual void unhover() {}; virtual void onhover() {};
+	virtual void interact() {}; virtual void uninteract() {}; virtual void oninteract() {};
+	
 	glm::vec3 m_hue = glm::vec3(0.0, 0.0, 0.0);
 
 public:
@@ -24,8 +27,8 @@ public:
 	t_tile get_type();
 
 	void set_hovered() {m_hovered = true;}
+	void set_interacted() {m_interacted = true;}
 	void update();
-	virtual void interact() {};
 	virtual void place(glm::vec3 coords) = 0;
 
 	glm::vec3 get_hue() {return m_hue;}

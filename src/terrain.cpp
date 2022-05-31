@@ -9,6 +9,18 @@ float calcDepth(glm::vec3 coords) {
 	return len / 1000000.0;
 }
 
+void hover_hue(Tile* t, bool on) {
+	if (on) t->set_hue(glm::vec3(0.2, 0.2, 1.0));
+	else t->set_hue(glm::vec3(0.0, 0.0, 0.0));
+}
+
+void interact_hue(Tile* t, bool on) {
+	if (on) t->set_hue(glm::vec3(1.0, 1.0, 0.2));
+	else t->set_hue(glm::vec3(0.0, 0.0, 0.0));
+}
+
+
+
 void Grass::place(glm::vec3 coords) {
 	set_coords(coords);
 	m_depth = calcDepth(coords);
@@ -19,12 +31,22 @@ Grass::Grass() {
 }
 
 void Grass::hover() {
-	set_hue(glm::vec3(0.2, 0.2, 1.0));
+	hover_hue(this, true);
 }
 
 void Grass::unhover() {
-	set_hue(glm::vec3(0.0, 0.0, 0.0));
+	hover_hue(this, false);
 }
+
+void Grass::interact() {
+	interact_hue(this, true);
+}
+
+void Grass::uninteract() {
+	interact_hue(this, false);
+}
+
+
 
 void Stone::place(glm::vec3 coords) {
 	set_coords(coords);
@@ -36,9 +58,17 @@ Stone::Stone() {
 }
 
 void Stone::hover() {
-	set_hue(glm::vec3(0.2, 0.2, 1.0));
+	hover_hue(this, true);
 }
 
 void Stone::unhover() {
-	set_hue(glm::vec3(0.0, 0.0, 0.0));
+	hover_hue(this, false);
+}
+
+void Stone::interact() {
+	interact_hue(this, true);
+}
+
+void Stone::uninteract() {
+	interact_hue(this, false);
 }

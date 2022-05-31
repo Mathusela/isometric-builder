@@ -18,10 +18,21 @@ t_tile Tile::get_type() {
 }
 
 void Tile::update() {
-	if (m_hovered) hover();
+	if (m_hovered) {
+		if (!m_wasHovered) onhover();
+		hover();
+	}
 	else if (m_wasHovered) unhover();
 	m_wasHovered = m_hovered;
 	m_hovered = false;
+
+	if (m_interacted) {
+		if (!m_wasInteracted) oninteract();
+		interact();
+	}
+	else if (m_wasInteracted) uninteract();
+	m_wasInteracted = m_interacted;
+	m_interacted = false;
 }
 
 Tile::Tile() {}
