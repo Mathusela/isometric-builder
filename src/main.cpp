@@ -23,8 +23,6 @@ float tileGeom[] = {
 	1.0, 1.0, 0.0
 };
 
-// TODO: add deltatime 
-
 // Vector of tiles to be drawn
 std::vector<Tile*> g_tiles;
 
@@ -120,14 +118,18 @@ void gen_tile_VAO(t_buffer& VAO, t_buffer& cVBO, t_tile type) {
 	glBindVertexArray(0);
 }
 
-void handle_keyboard(GLFWwindow* window, int WIDTH, int HEIGHT) {
-	if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) if (g_numInRow <= 20.0) g_numInRow += 0.01;
-	if(glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) if (g_numInRow >= 1.0) g_numInRow -= 0.01;
+// Handle input
+void handle_keyboard(GLFWwindow* window, float deltaTime) {
+	float zoomSpeed = 3.5 * deltaTime;
+	float moveSpeed = 3.5 * deltaTime;
+
+	if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) if (g_numInRow <= 20.0) g_numInRow += zoomSpeed;
+	if(glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) if (g_numInRow >= 3.0) g_numInRow -= zoomSpeed;
 	
-	if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) g_worldPos -= glm::vec2(0.0, 0.01);
-	if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) g_worldPos += glm::vec2(0.0, 0.01);
-	if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) g_worldPos += glm::vec2(0.01, 0.0);
-	if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) g_worldPos -= glm::vec2(0.01, 0.0);
+	if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) g_worldPos -= glm::vec2(0.0, moveSpeed);
+	if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) g_worldPos += glm::vec2(0.0, moveSpeed);
+	if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) g_worldPos += glm::vec2(moveSpeed, 0.0);
+	if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) g_worldPos -= glm::vec2(moveSpeed, 0.0);
 } 
 
 void handle_mouse(GLFWwindow* window, int WIDTH, int HEIGHT) {
@@ -168,8 +170,8 @@ void handle_mouse(GLFWwindow* window, int WIDTH, int HEIGHT) {
 	for (auto tile : g_tiles) tile->update(); 
 }
 
-void handle_input(GLFWwindow* window, int WIDTH, int HEIGHT) {
-	handle_keyboard(window, WIDTH, HEIGHT);
+void handle_input(GLFWwindow* window, int WIDTH, int HEIGHT, float deltaTime) {
+	handle_keyboard(window, deltaTime);
 	handle_mouse(window, WIDTH, HEIGHT);
 }
 
@@ -181,6 +183,8 @@ void gen_count_map() {
 		g_countMap.insert({(t_tile)i, count});
 	}
 }
+
+float prevTime = 0;
 
 int main() {
 	// Initialize GLFW and create a window
@@ -242,13 +246,21 @@ int main() {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	while (!glfwWindowShouldClose(window)) {
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		// Delta time
+		float deltaTime = glfwGetTime() - prevTime;
+		prevTime = glfwGetTime();
 
+		// Clear
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+		// Draw
 		for (int i=GRASS; i<TILE_END; i++) draw_tiles(shaderProgram, VAOs[i], (t_tile)i);
 
-		handle_input(window, WIDTH, HEIGHT);
+		// Input and update positions
+		handle_input(window, WIDTH, HEIGHT, deltaTime);
 		for (int i=GRASS; i<TILE_END; i++) update_coord_VBO(VBOs[i], (t_tile)i);
 
+		// Poll events and refresh display
 		glfwPollEvents();
 		glfwSwapBuffers(window);
 	}
