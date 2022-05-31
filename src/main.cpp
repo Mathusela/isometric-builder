@@ -140,8 +140,8 @@ void handle_mouse(GLFWwindow* window, int WIDTH, int HEIGHT) {
 	x /= WIDTH/2; x += -1.0; y /= HEIGHT/2; y = 1.0 - y;
 
 	// TODO: If I can do the inverse of this to the mouse position I can use hash mapping to speed this up and directly access the hovered tiles
-	glm::mat3 iso = {glm::vec3 {(1.0/numInRow)/2.0, (1.0/numInRow)*0.36, 0.0},
-					 glm::vec3 {-(1.0/numInRow)/2.0, 0.36/(numInRow), 0.0},
+	glm::mat3 iso = {glm::vec3 {(1.0/numInRow)/2.1, (1.0/numInRow)*0.36, 0.0},
+					 glm::vec3 {-(1.0/numInRow)/2.1, 0.36/(numInRow), 0.0},
 					 glm::vec3 {0.0, 0.69/(numInRow), 1.0}};
 
 	auto scaledBL = ((glm::vec2(0, 0) + g_worldPos) / glm::vec2(WIDTH, HEIGHT))*(WIDTH/numInRow) - glm::vec2(0.5 * (1.0/numInRow), 1.0);

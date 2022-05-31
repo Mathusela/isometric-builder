@@ -15,7 +15,7 @@ void hover_hue(Tile* t, bool on) {
 }
 
 void interact_hue(Tile* t, bool on) {
-	if (on) t->set_hue(glm::vec3(1.0, 1.0, 0.2));
+	if (on) t->set_hue(glm::vec3(1.0, 0.2, 1.0));
 	else t->set_hue(glm::vec3(0.0, 0.0, 0.0));
 }
 
