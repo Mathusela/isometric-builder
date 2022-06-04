@@ -132,6 +132,7 @@ void handle_keyboard(GLFWwindow* window, float deltaTime) {
 	if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) g_worldPos -= glm::vec2(moveSpeed, 0.0);
 } 
 
+int prevMouseState = GLFW_RELEASE;
 void handle_mouse(GLFWwindow* window, int WIDTH, int HEIGHT) {
 	float numInRow = g_numInRow;
 	numInRow = numInRow/2.0f;
@@ -148,28 +149,43 @@ void handle_mouse(GLFWwindow* window, int WIDTH, int HEIGHT) {
 	auto scaledTR = ((glm::vec2(1, 1) + g_worldPos) / glm::vec2(WIDTH, HEIGHT))*(WIDTH/numInRow) - glm::vec2(0.5 * (1.0/numInRow), 1.0);
 
 	std::vector<Tile*> hoveredTiles;
+	std::vector<unsigned int> indexArr;
+	unsigned int count = 0;
 	for (auto tile : g_tiles) {
 		glm::vec3 isoBL = glm::vec3(scaledBL.x, scaledBL.y, 0.0) + (iso * tile->get_coords());
 		glm::vec3 isoTR = glm::vec3(scaledTR.x, scaledTR.y, 0.0) + (iso * tile->get_coords());
 
-		if (x >= isoBL.x && x <= isoTR.x && y >= isoBL.y && y <= isoTR.y) hoveredTiles.push_back(tile);
+		if (x >= isoBL.x && x <= isoTR.x && y >= isoBL.y && y <= isoTR.y) {hoveredTiles.push_back(tile); indexArr.push_back(count);}
+		count++;
 	}
 
 	// FIXME: Tiles under other tiles are covered up by the corners of other tiles
 	if (hoveredTiles.size() != 0) {
 		auto minDepth = hoveredTiles[0]->get_depth();
+		unsigned int closestIndex;
 		Tile* closestTile;
+		
+		unsigned int count = 0;
 		for (auto hovered : hoveredTiles) {
 			if (hovered->get_depth() <= minDepth) {
 				closestTile = hovered;
+				closestIndex = count;
 				minDepth = hovered->get_depth();
 			}
+			count++;
 		}
+		closestIndex = indexArr[closestIndex];
+
 		closestTile->set_hovered();
-		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) closestTile->set_interacted();
+		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
+			closestTile->set_interacted();
+			if (prevMouseState == GLFW_RELEASE && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) closestTile->remove(g_tiles, closestIndex);
+			else if (prevMouseState == GLFW_RELEASE) closestTile->build(g_tiles, closestTile->get_type());
+		}
 	}
 
-	for (auto tile : g_tiles) tile->update(); 
+	for (auto tile : g_tiles) tile->update();
+	prevMouseState = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1);
 }
 
 void handle_input(GLFWwindow* window, int WIDTH, int HEIGHT, float deltaTime) {

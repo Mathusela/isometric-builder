@@ -30,6 +30,8 @@ public:
 	void set_interacted() {m_interacted = true;}
 	void update();
 	virtual void place(glm::vec3 coords) = 0;
+	virtual void build(std::vector<Tile*>& tiles, t_tile type);
+	virtual void remove(std::vector<Tile*>& tiles, unsigned int index);
 
 	glm::vec3 get_hue() {return m_hue;}
 	void set_hue(glm::vec3 hue) {m_hue = hue;}
